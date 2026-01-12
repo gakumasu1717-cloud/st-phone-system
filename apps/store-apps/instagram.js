@@ -2582,10 +2582,10 @@ Write a short reply comment (1 sentence). Output ONLY the reply text, no quotes.
                     }, 500);
                 });
                 
-                // 채팅 변경 시 플래그 리셋
+                // 채팅 변경 시 플래그 리셋 및 데이터 리로드
                 if (eventTypes.CHAT_CHANGED) {
                     eventSource.on(eventTypes.CHAT_CHANGED, () => {
-                        console.log('[Instagram] 채팅 변경 감지 - 플래그 리셋');
+                        console.log('[Instagram] 채팅 변경 감지 - 데이터 리로드');
                         initialLoadComplete = false;
                         lastMessageIdOnLoad = -1;
                         // [수정] 채팅 로드 시간 재설정
@@ -2593,6 +2593,8 @@ Write a short reply comment (1 sentence). Output ONLY the reply text, no quotes.
                         // 새 채팅의 메시지 수 저장
                         const c = window.SillyTavern.getContext();
                         lastProcessedMsgId = c?.chat?.length || 0;
+                        // [NEW] 새 채팅에 맞는 포스트 데이터 리로드
+                        loadPosts();
                         setTimeout(() => { initialLoadComplete = true; }, 2000);
                     });
                 }
@@ -2740,43 +2742,47 @@ Write a short reply comment (1 sentence). Output ONLY the reply text, no quotes.
         const nameDiv = msgNode.querySelector('.name_text, .ch_name');
         const charName = nameDiv?.textContent?.trim() || getCharacterInfo()?.name || 'Unknown';
         
-        // [중요] 태그 제거 전에 포스트/댓글 생성 먼저!
+        // instagramPostEnabled 설정 체크 (포스트/댓글 생성 여부 결정)
+        const settings = window.STPhone.Apps?.Settings?.getSettings?.() || {};
+        const shouldCreateContent = settings.instagramPostEnabled !== false;
+        
+        // [중요] 태그 제거 전에 포스트/댓글 생성 먼저! (설정이 활성화된 경우에만)
         // 1. [IG_POST] Instagram 포스팅
         const igPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedPost);
-        if (igPostMatch && igPostMatch[1]) {
+        if (igPostMatch && igPostMatch[1] && shouldCreateContent) {
             createPostFromChat(charName, igPostMatch[1].trim());
         }
         
         // 2. [IG_REPLY] 답글
         const igReplyMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedReply);
-        if (igReplyMatch && igReplyMatch[1]) {
+        if (igReplyMatch && igReplyMatch[1] && shouldCreateContent) {
             addReplyFromChat(charName, igReplyMatch[1].trim());
         }
         
         // 3. [IG_COMMENT] 댓글
         const igCommentMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedComment);
-        if (igCommentMatch && igCommentMatch[1]) {
+        if (igCommentMatch && igCommentMatch[1] && shouldCreateContent) {
             addCommentFromChat(charName, igCommentMatch[1].trim());
         }
         
         // 4. 레거시 패턴들
         const parenPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.parenPost);
-        if (parenPostMatch && parenPostMatch[1]) {
+        if (parenPostMatch && parenPostMatch[1] && shouldCreateContent) {
             createPostFromChat(charName, parenPostMatch[1].trim());
         }
         
         const legacyPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyPost);
-        if (legacyPostMatch && legacyPostMatch[1]) {
+        if (legacyPostMatch && legacyPostMatch[1] && shouldCreateContent) {
             createPostFromChat(charName, legacyPostMatch[1].trim());
         }
         
         const legacyReplyMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyReply);
-        if (legacyReplyMatch && legacyReplyMatch[1]) {
+        if (legacyReplyMatch && legacyReplyMatch[1] && shouldCreateContent) {
             addReplyFromChat(charName, legacyReplyMatch[1].trim());
         }
         
         const legacyCommentMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyComment);
-        if (legacyCommentMatch && legacyCommentMatch[1]) {
+        if (legacyCommentMatch && legacyCommentMatch[1] && shouldCreateContent) {
             addCommentFromChat(charName, legacyCommentMatch[1].trim());
         }
         
