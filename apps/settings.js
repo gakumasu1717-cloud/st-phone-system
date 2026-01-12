@@ -1260,13 +1260,13 @@ $('#st-set-sms-persona').val(currentSettings.smsPersona);
         }
 
         // #IG_START - Instagram 설정 로드 (프롬프트 탭)
-        $('#st-set-insta-post-enabled-tab').prop('checked', currentSettings.instagramPostEnabled !== false);
-        $('#st-set-insta-post-chance-tab').val(currentSettings.instagramPostChance || 15);
-        $('#st-insta-post-chance-display-tab').text((currentSettings.instagramPostChance || 15) + '%');
+        $('#st-set-insta-post-enabled').prop('checked', currentSettings.instagramPostEnabled !== false);
+        $('#st-set-insta-post-chance').val(currentSettings.instagramPostChance || 15);
+        $('#st-insta-post-chance-display').text((currentSettings.instagramPostChance || 15) + '%');
         if (currentSettings.instagramPostEnabled === false) {
-            $('#st-insta-options-tab').hide();
+            $('#st-insta-options').hide();
         } else {
-            $('#st-insta-options-tab').show();
+            $('#st-insta-options').show();
         }
         $('#st-prompt-instagram-tab').val(currentSettings.instagramPrompt || defaultSettings.instagramPrompt);
         $('#st-prompt-insta-allinone-tab').val(currentSettings.instaAllInOnePrompt || defaultSettings.instaAllInOnePrompt);
