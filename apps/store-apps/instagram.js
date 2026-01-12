@@ -2749,27 +2749,38 @@ Write a short reply comment (1 sentence). Output ONLY the reply text, no quotes.
         let modified = false;
         
         // 캐릭터 이름 가져오기 (포스트 생성용)
-        // [수정] 캘린더 타임스탬프 제외 - 순수 이름만 추출
+        // [수정] 메시지 노드의 실제 발신자 우선 (그룹챗/다중 캐릭터 지원)
         let charName = 'Unknown';
-        const nameDiv = msgNode.querySelector('.name_text, .ch_name');
-        if (nameDiv) {
-            // 방법 1: 첫 번째 텍스트 노드만 가져오기 (타임스탬프 span 제외)
-            const firstTextNode = Array.from(nameDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-            if (firstTextNode && firstTextNode.textContent.trim()) {
-                charName = firstTextNode.textContent.trim();
-            } else {
-                // 방법 2: timestamp 클래스 span 제외하고 텍스트 가져오기
-                const clonedDiv = nameDiv.cloneNode(true);
-                const timestampSpan = clonedDiv.querySelector('.mes_time, .timestamp, [class*="time"]');
-                if (timestampSpan) timestampSpan.remove();
-                charName = clonedDiv.textContent.trim() || getCharacterInfo()?.name || 'Unknown';
-            }
+        
+        // 방법 1: ch_name attribute (가장 정확 - 해당 메시지의 실제 발신자)
+        const chNameAttr = msgNode.getAttribute('ch_name');
+        if (chNameAttr) {
+            charName = chNameAttr;
         } else {
-            charName = getCharacterInfo()?.name || 'Unknown';
+            // 방법 2: DOM에서 추출 (타임스탬프 제외)
+            const nameDiv = msgNode.querySelector('.name_text, .ch_name');
+            if (nameDiv) {
+                // 첫 번째 텍스트 노드만 가져오기 (타임스탬프 span 제외)
+                const firstTextNode = Array.from(nameDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                if (firstTextNode && firstTextNode.textContent.trim()) {
+                    charName = firstTextNode.textContent.trim();
+                } else {
+                    // timestamp 클래스 span 제외하고 텍스트 가져오기
+                    const clonedDiv = nameDiv.cloneNode(true);
+                    const timestampSpans = clonedDiv.querySelectorAll('.mes_time, .timestamp, [class*="time"], [class*="date"]');
+                    timestampSpans.forEach(span => span.remove());
+                    charName = clonedDiv.textContent.trim();
+                }
+            }
+            
+            // 방법 3: SillyTavern 컨텍스트 (fallback)
+            if (!charName || charName === 'Unknown') {
+                const ctx = window.SillyTavern?.getContext?.();
+                charName = ctx?.name2 || getCharacterInfo()?.name || 'Unknown';
+            }
         }
         
         // instagramPostEnabled 설정 체크 (포스팅만 체크, 댓글/답글은 항상 허용)
-        const settings = window.STPhone.Apps?.Settings?.getSettings?.() || {};
         const settings = window.STPhone.Apps?.Settings?.getSettings?.() || {};
         const postingEnabled = settings.instagramPostEnabled !== false;
         
