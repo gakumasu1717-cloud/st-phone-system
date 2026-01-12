@@ -1504,8 +1504,13 @@ Decide TWO things:
                     console.log('[Instagram] 최근 포스팅 후 30초 내 - 새 포스팅 스킵 (' + Math.round((POST_COOLDOWN - timeSinceLastPost) / 1000) + '초 남음)');
                 } else {
                     const chance = settings.instagramPostChance || 15;
+                    
+                    // 0%면 포스팅 완전 스킵 (댓글만 처리)
+                    if (chance === 0) {
+                        console.log('[Instagram] 확률 0% - 포스팅 스킵 (댓글만 처리)');
+                    } else {
                     const roll = Math.random() * 100;
-                    const shouldAttemptPost = roll <= chance;
+                    const shouldAttemptPost = roll < chance;  // <= 에서 < 로 변경 (0% 엣지케이스 방지)
                     
                     // 중복 캡션 체크
                     const captionKey = result.newPost.caption?.trim().toLowerCase();
@@ -1573,6 +1578,7 @@ Decide TWO things:
                         isGeneratingPost = false;  // 포스팅 완료
                     }
                 }  // shouldAttemptPost 블록 닫기
+                }  // chance !== 0 블록 닫기 (else)
                 }  // 쿨다운 체크 블록 닫기
             }  // isGeneratingPost 체크 블록 닫기
             
