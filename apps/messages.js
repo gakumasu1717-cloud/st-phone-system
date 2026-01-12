@@ -1346,40 +1346,11 @@ function addMessage(contactId, sender, text, imageUrl = null, addTimestamp = fal
     }
 
     async function receiveMessageSequential(contactId, text, contactName, myName, replyTo = null) {
-        // #IG_START - 줄 단위 처리 전에 전체 텍스트에서 Instagram 태그 먼저 처리
-        const Instagram = window.STPhone?.Apps?.Instagram;
-        
-        if (Instagram) {
-            // [IG_POST] 태그 처리 (전체 텍스트에서)
-            const igPostMatch = text.match(/\[IG_POST\]([\s\S]*?)\[\/IG_POST\]/i);
-            if (igPostMatch) {
-                const caption = igPostMatch[1].trim();
-                if (typeof Instagram.createPostFromChat === 'function') {
-                    Instagram.createPostFromChat(contactName, caption);
-                }
-                text = text.replace(/\[IG_POST\][\s\S]*?\[\/IG_POST\]/gi, '').trim();
-            }
-            
-            // [IG_REPLY] 태그 처리 (전체 텍스트에서)
-            const igReplyMatch = text.match(/\[IG_REPLY\]([\s\S]*?)\[\/IG_REPLY\]/i);
-            if (igReplyMatch) {
-                const replyContent = igReplyMatch[1].trim();
-                if (typeof Instagram.addReplyFromChat === 'function') {
-                    Instagram.addReplyFromChat(contactName, replyContent);
-                }
-                text = text.replace(/\[IG_REPLY\][\s\S]*?\[\/IG_REPLY\]/gi, '').trim();
-            }
-            
-            // [IG_COMMENT] 태그 처리 (전체 텍스트에서)
-            const igCommentMatch = text.match(/\[IG_COMMENT\]([\s\S]*?)\[\/IG_COMMENT\]/i);
-            if (igCommentMatch) {
-                const commentContent = igCommentMatch[1].trim();
-                if (typeof Instagram.addCommentFromChat === 'function') {
-                    Instagram.addCommentFromChat(contactName, commentContent);
-                }
-                text = text.replace(/\[IG_COMMENT\][\s\S]*?\[\/IG_COMMENT\]/gi, '').trim();
-            }
-        }
+        // #IG_START - Instagram 태그 제거만 수행 (실제 처리는 processInstagramMessage에서)
+        // [IG_POST], [IG_REPLY], [IG_COMMENT] 태그 제거
+        text = text.replace(/\[IG_POST\][\s\S]*?\[\/IG_POST\]/gi, '').trim();
+        text = text.replace(/\[IG_REPLY\][\s\S]*?\[\/IG_REPLY\]/gi, '').trim();
+        text = text.replace(/\[IG_COMMENT\][\s\S]*?\[\/IG_COMMENT\]/gi, '').trim();
         // #IG_END
         
         const lines = text.split('\n').filter(l => l.trim());
@@ -1427,47 +1398,27 @@ function addMessage(contactId, sender, text, imageUrl = null, addTimestamp = fal
                 // 빈 줄이면 스킵
                 if (!lineText) continue;
                 
-                // 괄호 형식: (Instagram: "캡션")
+                // 괄호 형식: (Instagram: "캡션") - 태그 제거만 (처리는 processInstagramMessage에서)
                 if (lineText.includes('(Instagram:')) {
-                    const postMatch = lineText.match(/\(Instagram:\s*"([^"]+)"\)/i);
-                    if (postMatch && typeof InstagramLine.createPostFromChat === 'function') {
-                        InstagramLine.createPostFromChat(contactName, postMatch[1]);
-                    }
                     lineText = lineText.replace(/\(Instagram:\s*"[^"]+"\)/gi, '').trim();
                 }
                 
-                // 새 패턴: (Instagram Reply: "답글")
+                // 새 패턴: (Instagram Reply: "답글") - 태그 제거만
                 if (lineText.includes('(Instagram Reply:')) {
-                    const replyMatch = lineText.match(/\(Instagram Reply:\s*"([^"]+)"\)/i);
-                    if (replyMatch && typeof InstagramLine.addReplyFromChat === 'function') {
-                        InstagramLine.addReplyFromChat(contactName, replyMatch[1]);
-                    }
                     lineText = lineText.replace(/\(Instagram Reply:\s*"[^"]+"\)/gi, '').trim();
                 }
                 
-                // 기존 패턴들도 유지 (하위 호환)
+                // 기존 패턴들도 유지 (하위 호환) - 태그 제거만
                 if (lineText.includes('[Instagram 포스팅]')) {
-                    const postMatch = lineText.match(/\[Instagram 포스팅\][^"]*"([^"]+)"/i);
-                    if (postMatch && typeof InstagramLine.createPostFromChat === 'function') {
-                        InstagramLine.createPostFromChat(contactName, postMatch[1]);
-                    }
                     lineText = lineText.replace(/\[Instagram 포스팅\][^\n]*/gi, '').trim();
                 }
                 
                 if (lineText.includes('[Instagram 답글]')) {
-                    const replyMatch = lineText.match(/\[Instagram 답글\][^"]*"([^"]+)"/i);
-                    if (replyMatch && typeof InstagramLine.addReplyFromChat === 'function') {
-                        InstagramLine.addReplyFromChat(contactName, replyMatch[1]);
-                    }
                     lineText = lineText.replace(/\[Instagram 답글\][^\n]*/gi, '').trim();
                 }
                 
-                // 댓글 패턴도 처리 (제거 + Instagram 호출)
+                // 댓글 패턴도 처리 (제거만)
                 if (lineText.includes('[Instagram 댓글]')) {
-                    const commentMatch = lineText.match(/\[Instagram 댓글\][^"]*"([^"]+)"/i);
-                    if (commentMatch && typeof InstagramLine.addCommentFromChat === 'function') {
-                        InstagramLine.addCommentFromChat(contactName, commentMatch[1]);
-                    }
                     lineText = lineText.replace(/\[Instagram 댓글\][^\n]*/gi, '').trim();
                 }
                 
