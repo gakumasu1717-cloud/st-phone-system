@@ -732,6 +732,21 @@ const EXTENSION_NAME = 'ST Phone System';
             return;
         }
         
+        // [NEW] 선톡처럼 확률 체크 - 확률 미달이면 프롬프트 주입 안 함 (AI가 태그 안 쓰게)
+        const chance = currentSettings.instagramPostChance || 15;
+        if (chance === 0) {
+            console.log(`📸 [${EXTENSION_NAME}] Instagram 확률 0% - 프롬프트 주입 스킵`);
+            return;
+        }
+        
+        const roll = Math.random() * 100;
+        if (roll >= chance) {
+            console.log(`📸 [${EXTENSION_NAME}] Instagram 확률 미달 (${roll.toFixed(0)}% >= ${chance}%) - 프롬프트 주입 스킵`);
+            return;
+        }
+        
+        console.log(`📸 [${EXTENSION_NAME}] Instagram 확률 통과 (${roll.toFixed(0)}% < ${chance}%) - 프롬프트 주입`);
+        
         // 인스타그램 프롬프트 가져오기 (기본값 포함)
         let instagramPrompt = currentSettings.instagramPrompt;
         if (!instagramPrompt) {
