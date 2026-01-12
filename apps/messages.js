@@ -3200,46 +3200,26 @@ Reply naturally based on the conversation history below.`;
                 }
             } catch (bankErr) {}
 
-            // #IG_START - [수정] Instagram 태그를 [IMG:] 태그보다 먼저 처리
-            // [IG_POST] 태그 처리
+            // #IG_START - [수정] Instagram 태그 제거만 수행 (실제 처리는 processInstagramMessage에서)
+            // [IG_POST] 태그 제거 (createPostFromChat 호출은 instagram.js processInstagramMessage에서 담당)
             const igPostMatch = replyText.match(/\[IG_POST\]([\s\S]*?)\[\/IG_POST\]/i);
             if (igPostMatch) {
-                const igCaption = igPostMatch[1].trim();
                 replyText = replyText.replace(/\[IG_POST\][\s\S]*?\[\/IG_POST\]/gi, '').trim();
-                
-                console.log('[Messages] IG_POST 태그 감지 (generateReply):', igCaption.substring(0, 50));
-                
-                const Instagram = window.STPhone?.Apps?.Instagram;
-                if (Instagram && typeof Instagram.createPostFromChat === 'function') {
-                    console.log('[Messages] Instagram.createPostFromChat 호출');
-                    Instagram.createPostFromChat(contact.name, igCaption);
-                } else {
-                    console.warn('[Messages] Instagram 앱 없음 또는 createPostFromChat 없음');
-                }
+                console.log('[Messages] IG_POST 태그 제거됨 (처리는 processInstagramMessage에서)');
             }
             
-            // [IG_REPLY] 태그 처리
+            // [IG_REPLY] 태그 제거
             const igReplyMatch = replyText.match(/\[IG_REPLY\]([\s\S]*?)\[\/IG_REPLY\]/i);
             if (igReplyMatch) {
-                const igReplyText = igReplyMatch[1].trim();
                 replyText = replyText.replace(/\[IG_REPLY\][\s\S]*?\[\/IG_REPLY\]/gi, '').trim();
-                console.log('[Messages] IG_REPLY 태그 감지 (generateReply):', igReplyText.substring(0, 50));
-                const Instagram = window.STPhone?.Apps?.Instagram;
-                if (Instagram && typeof Instagram.addReplyFromChat === 'function') {
-                    Instagram.addReplyFromChat(contact.name, igReplyText);
-                }
+                console.log('[Messages] IG_REPLY 태그 제거됨');
             }
             
-            // [IG_COMMENT] 태그 처리
+            // [IG_COMMENT] 태그 제거
             const igCommentMatch = replyText.match(/\[IG_COMMENT\]([\s\S]*?)\[\/IG_COMMENT\]/i);
             if (igCommentMatch) {
-                const igCommentText = igCommentMatch[1].trim();
                 replyText = replyText.replace(/\[IG_COMMENT\][\s\S]*?\[\/IG_COMMENT\]/gi, '').trim();
-                console.log('[Messages] IG_COMMENT 태그 감지 (generateReply):', igCommentText.substring(0, 50));
-                const Instagram = window.STPhone?.Apps?.Instagram;
-                if (Instagram && typeof Instagram.addCommentFromChat === 'function') {
-                    Instagram.addCommentFromChat(contact.name, igCommentText);
-                }
+                console.log('[Messages] IG_COMMENT 태그 제거됨');
             }
             
             // (Photo: ...) 패턴 제거 (인스타 포스팅용 이미지 설명)
