@@ -1431,7 +1431,8 @@ Decide TWO things:
         
         const settings = window.STPhone.Apps?.Settings?.getSettings?.() || {};
         
-        if (settings.instagramPostEnabled === false) return;
+        // [수정] instagramPostEnabled = false면 포스팅만 스킵, 댓글은 계속 처리
+        const postingEnabled = settings.instagramPostEnabled !== false;
         
         // 댓글 처리 중이면 스킵 (포스팅과 별도로 체크)
         if (isProcessingComments) {
@@ -1495,7 +1496,10 @@ Decide TWO things:
             }
             
             // 2. 포스팅 처리 (확률 체크 적용, isGeneratingPost로 중복 방지)
-            if (isGeneratingPost) {
+            // [수정] postingEnabled가 false면 포스팅 전체 스킵
+            if (!postingEnabled) {
+                console.log('[Instagram] 자동 포스팅 비활성화 - 댓글만 처리됨');
+            } else if (isGeneratingPost) {
                 console.log('[Instagram] 포스팅 생성 중, 포스팅만 스킵 (댓글은 처리됨)');
             } else {
                 // 절대러 체크: 최근 포스팅 후 30초 내 스킵
@@ -2748,47 +2752,47 @@ Write a short reply comment (1 sentence). Output ONLY the reply text, no quotes.
         const nameDiv = msgNode.querySelector('.name_text, .ch_name');
         const charName = nameDiv?.textContent?.trim() || getCharacterInfo()?.name || 'Unknown';
         
-        // instagramPostEnabled 설정 체크 (포스트/댓글 생성 여부 결정)
+        // instagramPostEnabled 설정 체크 (포스팅만 체크, 댓글/답글은 항상 허용)
         const settings = window.STPhone.Apps?.Settings?.getSettings?.() || {};
-        const shouldCreateContent = settings.instagramPostEnabled !== false;
+        const postingEnabled = settings.instagramPostEnabled !== false;
         
-        // [중요] 태그 제거 전에 포스트/댓글 생성 먼저! (설정이 활성화된 경우에만)
-        // 1. [IG_POST] Instagram 포스팅
+        // [중요] 태그 제거 전에 포스트/댓글 생성 먼저!
+        // 1. [IG_POST] Instagram 포스팅 (설정 체크)
         const igPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedPost);
-        if (igPostMatch && igPostMatch[1] && shouldCreateContent) {
+        if (igPostMatch && igPostMatch[1] && postingEnabled) {
             createPostFromChat(charName, igPostMatch[1].trim());
         }
         
-        // 2. [IG_REPLY] 답글
+        // 2. [IG_REPLY] 답글 (항상 허용 - 인스타 깔려있으면 댓글 기능은 무조건 활성화)
         const igReplyMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedReply);
-        if (igReplyMatch && igReplyMatch[1] && shouldCreateContent) {
+        if (igReplyMatch && igReplyMatch[1]) {
             addReplyFromChat(charName, igReplyMatch[1].trim());
         }
         
-        // 3. [IG_COMMENT] 댓글
+        // 3. [IG_COMMENT] 댓글 (항상 허용)
         const igCommentMatch = originalHtml.match(INSTAGRAM_PATTERNS.fixedComment);
-        if (igCommentMatch && igCommentMatch[1] && shouldCreateContent) {
+        if (igCommentMatch && igCommentMatch[1]) {
             addCommentFromChat(charName, igCommentMatch[1].trim());
         }
         
         // 4. 레거시 패턴들
         const parenPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.parenPost);
-        if (parenPostMatch && parenPostMatch[1] && shouldCreateContent) {
+        if (parenPostMatch && parenPostMatch[1] && postingEnabled) {
             createPostFromChat(charName, parenPostMatch[1].trim());
         }
         
         const legacyPostMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyPost);
-        if (legacyPostMatch && legacyPostMatch[1] && shouldCreateContent) {
+        if (legacyPostMatch && legacyPostMatch[1] && postingEnabled) {
             createPostFromChat(charName, legacyPostMatch[1].trim());
         }
         
         const legacyReplyMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyReply);
-        if (legacyReplyMatch && legacyReplyMatch[1] && shouldCreateContent) {
+        if (legacyReplyMatch && legacyReplyMatch[1]) {
             addReplyFromChat(charName, legacyReplyMatch[1].trim());
         }
         
         const legacyCommentMatch = originalHtml.match(INSTAGRAM_PATTERNS.legacyComment);
-        if (legacyCommentMatch && legacyCommentMatch[1] && shouldCreateContent) {
+        if (legacyCommentMatch && legacyCommentMatch[1]) {
             addCommentFromChat(charName, legacyCommentMatch[1].trim());
         }
         
