@@ -1132,7 +1132,7 @@ IMPORTANT:
 
         try {
             // AI에게 판단 요청
-            const result = await generateWithAI(aiInstruction, 250);
+            const result = await generateWithAI(aiInstruction, 800);
             const resultStr = String(result || '').trim();
 
             // 1. XML 태그 형식이 있는지 먼저 확인 (줄바꿈, 공백, 따옴표 유연성 개선)
